@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Advisor Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url('https://prescreenai.com/wp-content/uploads/2024/06/AI-recruiting-chatbot.webp'); /* Replace with your image URL */
+            background-size: cover;
+            background-position: center;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .chat-container {
+            width: 600px; /* Increased width */
+            height: 800px; /* Increased height */
+            background-color: rgba(255, 255, 255, 0.9); /* Semi-transparent background */                                                                                                                                                                                                               
+            box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background-color: #0056d2;
+            color: white;
+            padding: 20px;
+            font-size: 24px; /* Larger font size */
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background-color: #f9f9fc;
+            border-top: 1px solid #ddd;
+            border-bottom: 1px solid #ddd;
+            word-wrap: break-word; /* Ensures long words wrap */
+        }
+
+        .chat-message {
+            margin-bottom: 15px;
+        }
+
+        .chat-message.user {
+            text-align: right;
+        }
+
+        .chat-message.bot {
+            text-align: left;
+        }
+
+        .chat-message .message {
+            display: inline-block;
+            padding: 15px 20px;
+            border-radius: 20px;
+            max-width: 90%; /* Increased max width */
+            word-wrap: break-word; /* Ensure text wraps within the bubble */
+            white-space: pre-wrap; /* Preserves line breaks */
+        }
+
+        .chat-message.user .message {
+            background-color: #0056d2;
+            color: white;
+        }
+
+        .chat-message.bot .message {
+            background-color: #f4f4f9;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+
+        .chat-input {
+            display: flex;
+            padding: 15px;
+            background-color: #fff;
+            border-top: 1px solid #ddd;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 15px;
+            font-size: 18px; /* Larger font size */
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            outline: none;
+        }
+
+        .chat-input button {
+            margin-left: 15px;
+            background-color: #0056d2;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            padding: 15px 25px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .chat-input button:hover {
+            background-color: #0041a8;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            Job Advisor Chatbot
+        </div>
+        <div class="chat-messages" id="chat-messages">
+            <!-- Messages will appear here -->
+        </div>
+        <div class="chat-input">
+            <input type="text" id="user-input" placeholder="Type your message...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const chatMessages = document.getElementById('chat-messages');
+
+        function appendMessage(message, sender) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('chat-message', sender);
+            const messageContent = document.createElement('div');
+            messageContent.classList.add('message');
+            messageContent.textContent = message;
+            messageElement.appendChild(messageContent);
+            chatMessages.appendChild(messageElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const userInput = document.getElementById('user-input');
+            const message = userInput.value.trim();
+
+            if (!message) return;
+
+            // Append user message to chat
+            appendMessage(message, 'user');
+            userInput.value = '';
+
+            // Send message to the backend
+            try {
+                const response = await fetch('http://127.0.0.1:5001/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ query: message })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const history = data.history.split('\n');
+
+                    // Extract only the last AI response
+                    const botMessage = history[history.length - 1].replace("AI: ", "").trim();
+
+
+
+                    appendMessage(history, 'bot');
+                } else {
+                    appendMessage('Error: Unable to fetch response from server.', 'bot');
+                }
+            } catch (error) {
+                appendMessage('Error: Unable to connect to the server.', 'bot');
+            }
+        }
+    </script>
+</body>
+</html>
